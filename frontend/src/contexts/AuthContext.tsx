@@ -1,0 +1,204 @@
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { User } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
+
+interface Profile {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  profile: Profile | null;
+  loading: boolean;
+  signUp: (email: string, password: string, name: string, phone?: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        loadProfile(session.user.id);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      (async () => {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await loadProfile(session.user.id);
+        } else {
+          setProfile(null);
+          setLoading(false);
+        }
+      })();
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loadProfile = async (userId: string) => {
+    console.log('AuthContext: Loading profile for', userId);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('AuthContext: Error fetching profile from DB:', JSON.stringify(error));
+        throw error;
+      }
+
+      if (data) {
+        console.log('AuthContext: Profile found in DB:', data);
+        setProfile(data);
+      } else {
+        console.log('AuthContext: Profile NOT found in DB, attempting fallback/heal');
+        // Fallback for users registered before trigger
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const virtualProfile = {
+            id: user.id,
+            name: user.user_metadata?.name || 'User',
+            email: user.email || '',
+            phone: user.user_metadata?.phone || '',
+          };
+          console.log('AuthContext: Using virtual profile from metadata:', virtualProfile);
+          setProfile(virtualProfile);
+
+          // Attempt to heal: create missing profile record
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert(virtualProfile as any);
+
+          if (insertError) {
+            console.warn('AuthContext: Failed to auto-heal profile:', insertError.message);
+          } else {
+            console.log('AuthContext: Profile auto-healed successfully');
+          }
+
+          try {
+            await supabase
+              .from('user_settings')
+              .insert({ user_id: user.id } as any);
+          } catch (e) {
+            // Settings might already exist
+          }
+        } else {
+          console.log('AuthContext: No auth user found for fallback');
+        }
+      }
+    } catch (error) {
+      console.error('AuthContext: Critical error in loadProfile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signUp = async (email: string, password: string, name: string, phone?: string) => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            phone,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        profile,
+        loading,
+        signUp,
+        signIn,
+        signOut,
+        resetPassword,
+        updatePassword,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}

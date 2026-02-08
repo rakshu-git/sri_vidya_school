@@ -1,0 +1,26 @@
+# Ignore old duplicate files
+/server/
+/src/
+/supabase/
+/node_modules/
+/.env
+/.env.production.example
+/package.json
+/package-lock.json
+/index.html
+/vite.config.ts
+/tsconfig.json
+/tsconfig.app.json
+/tsconfig.node.json
+/tailwind.config.js
+/postcss.config.js
+/eslint.config.js
+/.bolt/
+
+# Editor
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

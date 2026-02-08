@@ -1,0 +1,20 @@
+{
+    "name": "temple-management-backend",
+    "version": "1.0.0",
+    "description": "Backend server for Temple Management Application",
+    "main": "server/index.js",
+    "type": "module",
+    "scripts": {
+        "start": "node server/index.js",
+        "dev": "node --watch server/index.js"
+    },
+    "dependencies": {
+        "axios": "^1.13.2",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "nodemailer": "^7.0.12",
+        "razorpay": "^2.9.4",
+        "twilio": "^5.11.2"
+    }
+}
