@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: temple-backend
+    name: school-backend
     env: node
     region: singapore
     plan: free

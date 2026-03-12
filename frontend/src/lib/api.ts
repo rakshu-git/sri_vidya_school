@@ -1,8 +1,6 @@
-// API Configuration
-// Uses environment variable in production, falls back to localhost in development
+
 export const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:3055';
 
-// API endpoints
 export const api = {
     createPaymentLink: async (data: { amount: number; customer: { name: string; email: string } }) => {
         const response = await fetch(`${API_URL}/api/create-payment-link`, {

@@ -65,85 +65,84 @@ export function Dashboard() {
   };
 
   const loadRazorpay = (): Promise<boolean> => {
-  return new Promise((resolve) => {
-    if ((window as any).Razorpay) {
-      resolve(true);
+    return new Promise((resolve) => {
+      if ((window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+
+  const handleRazorpayPayment = async (method: 'upi' | 'phonepe' | 'googlepay') => {
+    if (!amount || parseFloat(amount) <= 0) {
+      showToast(t('enterValidAmount'), 'error');
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-};
+    const res = await loadRazorpay();
+    if (!res) {
+      showToast('Razorpay SDK failed to load', 'error');
+      return;
+    }
 
+    setPaymentMethod(method);
+    setPaymentStep('processing');
 
- const handleRazorpayPayment = async (method: 'upi' | 'phonepe' | 'googlepay') => {
-  if (!amount || parseFloat(amount) <= 0) {
-    showToast(t('enterValidAmount'), 'error');
-    return;
-  }
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: Math.round(parseFloat(amount) * 100),
+      currency: 'INR',
+      name: 'School Donations',
+      description: 'Donation Payment',
+      image: 'https://your-logo-url.png',
 
-  const res = await loadRazorpay();
-  if (!res) {
-    showToast('Razorpay SDK failed to load', 'error');
-    return;
-  }
+      handler: async function (response: any) {
+        try {
+          const { error } = await supabase.from('donations').insert({
+            user_id: user!.id,
+            amount: parseFloat(amount),
+            transaction_id: response.razorpay_payment_id,
+            notes: 'Razorpay Test Payment',
+          } as any);
 
-  setPaymentMethod(method);
-  setPaymentStep('processing');
+          if (error) throw error;
 
-  const options = {
-    key: import.meta.env.VITE_RAZORPAY_KEY_ID, // TEST KEY
-    amount: Math.round(parseFloat(amount) * 100), // paise
-    currency: 'INR',
-    name: 'Temple Donations',
-    description: 'Donation Payment',
-    image: 'https://your-logo-url.png',
-
-    handler: async function (response: any) {
-      try {
-        // Save transaction to Supabase
-        const { error } = await supabase.from('donations').insert({
-          user_id: user!.id,
-          amount: parseFloat(amount),
-          transaction_id: response.razorpay_payment_id,
-          notes: 'Razorpay Test Payment',
-        } as any);
-
-        if (error) throw error;
-
-        setPaymentStep('success');
-        showToast(t('donationSuccessful'), 'success');
-        await loadDonationStats();
-      } catch (err) {
-        console.error(err);
-        showToast(t('donationFailed'), 'error');
-        setPaymentStep('selection');
-      }
-    },
-
-    prefill: {
-      name: profile?.name || '',
-      email: user?.email || '',
-    },
-
-    theme: {
-      color: '#F97316',
-    },
-
-    modal: {
-      ondismiss: () => {
-        setPaymentStep('selection');
+          setPaymentStep('success');
+          showToast(t('donationSuccessful'), 'success');
+          await loadDonationStats();
+        } catch (err) {
+          console.error(err);
+          showToast(t('donationFailed'), 'error');
+          setPaymentStep('selection');
+        }
       },
-    },
-  };
 
-  const paymentObject = new (window as any).Razorpay(options);
-  paymentObject.open();
-};
+      prefill: {
+        name: profile?.name || '',
+        email: user?.email || '',
+      },
+
+      theme: {
+        color: '#3B82F6',
+      },
+
+      modal: {
+        ondismiss: () => {
+          setPaymentStep('selection');
+        },
+      },
+    };
+
+    const paymentObject = new (window as any).Razorpay(options);
+    paymentObject.open();
+  };
 
 
 
@@ -179,11 +178,10 @@ export function Dashboard() {
   return (
     <Layout>
       <div className="space-y-8">
-        {/* Banner */}
         <div className="relative h-64 rounded-2xl overflow-hidden shadow-2xl">
           <img
-            src="https://images.pexels.com/photos/12398207/pexels-photo-12398207.jpeg"
-            alt="Temple"
+            src="https://images.pexels.com/photos/10646410/pexels-photo-10646410.jpeg?_gl=1*1meplqx*_ga*MTcxNDk3NTg5OC4xNzY4NzI3MDMw*_ga_8JE65Q40S6*czE3NzMyOTE5NjIkbzIkZzAkdDE3NzMyOTE5NjIkajYwJGwwJGgw"
+            alt="School"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end">
@@ -198,42 +196,40 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-orange-100">
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-blue-100">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-gray-600 font-medium">{t('totalDonations')}</h3>
-              <IndianRupee className="w-8 h-8 text-orange-500" />
+              <IndianRupee className="w-8 h-8 text-blue-500" />
             </div>
             <p className="text-3xl font-bold text-gray-800">Rs.{totalDonations.toFixed(2)}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-orange-100">
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-blue-100">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-gray-600 font-medium">{t('lastDonation')}</h3>
-              <TrendingUp className="w-8 h-8 text-amber-500" />
+              <TrendingUp className="w-8 h-8 text-indigo-500" />
             </div>
             <p className="text-lg font-semibold text-gray-800">
               {lastDonation ? dayjs(lastDonation).format('MMM DD, YYYY') : t('noDonationsYet')}
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl p-6 shadow-lg">
+          <div className="bg-gradient-to-br from-blue-500 to-amber-600 rounded-xl p-6 shadow-lg group hover:brightness-105 transition-all">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-white font-medium">{t('makeDonation')}</h3>
-              <Heart className="w-8 h-8 text-white" />
+              <Heart className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
             </div>
             <button
               onClick={() => setShowDonateModal(true)}
-              className="w-full bg-white text-orange-600 py-2 rounded-lg font-medium hover:bg-orange-50 transition-colors"
+              className="w-full bg-white text-blue-600 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors"
             >
               {t('donateNow')}
             </button>
           </div>
         </div>
 
-        {/* Recent Donations Table */}
-        <div className="bg-white rounded-xl p-6 shadow-lg border border-orange-100">
+        <div className="bg-white rounded-xl p-6 shadow-lg border border-blue-100">
           <h2 className="text-xl font-bold text-gray-800 mb-4">{t('recentDonations')}</h2>
           {recentDonations.length > 0 ? (
             <div className="space-y-3">
@@ -260,12 +256,10 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Donation Modal */}
       {showDonateModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
           <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl transform animate-in slide-in-from-bottom-8 duration-500 max-h-[90vh] flex flex-col overflow-hidden">
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-orange-500 to-amber-600 p-6 flex items-center justify-between text-white relative">
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 flex items-center justify-between text-white relative">
               <h2 className="text-xl font-bold pr-12">
                 {paymentStep === 'selection' && t('chooseAmount')}
                 {paymentStep === 'processing' && t('processingPayment')}
@@ -283,7 +277,6 @@ export function Dashboard() {
             <div className="p-8 overflow-y-auto flex-1 custom-scrollbar">
               {paymentStep === 'selection' && (
                 <div className="space-y-6">
-                  {/* Amount Selection Section */}
                   <div className="space-y-4">
                     <div>
                       <label htmlFor="amount" className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
@@ -301,7 +294,7 @@ export function Dashboard() {
                           autoFocus
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-orange-500 transition-all text-xl font-bold text-gray-800"
+                          className="w-full pl-10 pr-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all text-xl font-bold text-gray-800"
                           placeholder="0.00"
                         />
                       </div>
@@ -314,8 +307,8 @@ export function Dashboard() {
                           type="button"
                           onClick={() => setAmount(preset.toString())}
                           className={`py-2 px-1 border-2 rounded-xl transition-all font-bold text-sm ${amount === preset.toString()
-                            ? 'bg-orange-500 border-orange-500 text-white shadow-lg shadow-orange-200'
-                            : 'border-gray-100 text-gray-600 hover:border-orange-200 hover:bg-orange-50'
+                            ? 'bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-200'
+                            : 'border-gray-100 text-gray-600 hover:border-blue-200 hover:bg-blue-50'
                             }`}
                         >
                           ₹{preset}
@@ -326,22 +319,21 @@ export function Dashboard() {
 
                   <div className="h-px bg-gray-100 my-2"></div>
 
-                  {/* Payment Methods Section */}
                   <div className="space-y-3">
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t('payUsing')} UPI</p>
 
                     <button
                       onClick={() => handleRazorpayPayment('phonepe')}
-                      className="w-full flex items-center justify-between p-4 bg-white border-2 border-gray-100 rounded-2xl hover:border-purple-500 hover:bg-purple-50 transition-all group"
+                      className="w-full flex items-center justify-between p-4 bg-white border-2 border-gray-100 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
                           <img src="https://cryptologos.cc/logos/phonepe-logo.png" alt="PhonePe" className="w-7 h-7 object-contain" onError={(e) => (e.currentTarget.src = "https://www.phonepe.com/favicon-32x32.png")} />
                         </div>
                         <p className="font-bold text-gray-800">PhonePe</p>
                       </div>
-                      <div className="w-5 h-5 border-2 border-gray-200 rounded-full group-hover:border-purple-500 flex items-center justify-center">
-                        <div className="w-2.5 h-2.5 bg-purple-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <div className="w-5 h-5 border-2 border-gray-200 rounded-full group-hover:border-blue-500 flex items-center justify-center">
+                        <div className="w-2.5 h-2.5 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
                       </div>
                     </button>
 
@@ -362,16 +354,16 @@ export function Dashboard() {
 
                     <button
                       onClick={() => handleRazorpayPayment('upi')}
-                      className="w-full flex items-center justify-between p-4 bg-white border-2 border-gray-100 rounded-2xl hover:border-orange-500 hover:bg-orange-50 transition-all group"
+                      className="w-full flex items-center justify-between p-4 bg-white border-2 border-gray-100 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600 font-bold text-xs">
+                        <div className="w-10 h-10 bg-sky-100 rounded-xl flex items-center justify-center text-blue-600 font-bold text-xs">
                           UPI
                         </div>
                         <p className="font-bold text-gray-800">{t('payUsingUpi')}</p>
                       </div>
-                      <div className="w-5 h-5 border-2 border-gray-200 rounded-full group-hover:border-orange-500 flex items-center justify-center">
-                        <div className="w-2.5 h-2.5 bg-orange-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <div className="w-5 h-5 border-2 border-gray-200 rounded-full group-hover:border-blue-500 flex items-center justify-center">
+                        <div className="w-2.5 h-2.5 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
                       </div>
                     </button>
                   </div>
@@ -383,7 +375,7 @@ export function Dashboard() {
                         <span>{t('securedBy')}</span>
                       </div>
                       <p className="text-gray-400 font-medium italic">{t('qrNote')}</p>
-                      <p className="text-[9px] text-amber-500 font-semibold bg-amber-50 px-3 py-1 rounded-full border border-amber-100 mt-1">
+                      <p className="text-[9px] text-blue-500 font-semibold bg-blue-50 px-3 py-1 rounded-full border border-blue-100 mt-1">
                         {t('testModeNote')}
                       </p>
                     </div>
@@ -394,10 +386,10 @@ export function Dashboard() {
               {paymentStep === 'processing' && (
                 <div className="py-12 text-center space-y-6">
                   <div className="relative w-24 h-24 mx-auto">
-                    <div className="absolute inset-0 border-4 border-orange-50 rounded-full"></div>
-                    <div className="absolute inset-0 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 border-4 border-blue-50 rounded-full"></div>
+                    <div className="absolute inset-0 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <IndianRupee className="w-10 h-10 text-orange-500" />
+                      <IndianRupee className="w-10 h-10 text-blue-500" />
                     </div>
                   </div>
                   <div>
@@ -426,7 +418,7 @@ export function Dashboard() {
                   </div>
                   <button
                     onClick={resetModal}
-                    className="w-full bg-gray-900 text-white py-4 rounded-2xl font-bold hover:bg-gray-800 transition-colors shadow-lg"
+                    className="w-full bg-blue-900 text-white py-4 rounded-2xl font-bold hover:bg-blue-800 transition-colors shadow-lg"
                   >
                     {t('done')}
                   </button>

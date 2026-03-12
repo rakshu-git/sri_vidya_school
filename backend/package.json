@@ -1,7 +1,7 @@
 {
-    "name": "temple-management-backend",
+    "name": "school-management-backend",
     "version": "1.0.0",
-    "description": "Backend server for Temple Management Application",
+    "description": "Backend server for School Management Application",
     "main": "server/index.js",
     "type": "module",
     "scripts": {

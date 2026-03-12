@@ -97,7 +97,6 @@ export function Settings() {
         throw new Error(data.error || 'Failed to send test notification');
       }
 
-      // Show success message with additional info
       if (data.mock) {
         showToast(t('testSentMock', { type, dest: type === 'email' ? 'server console' : 'server console' }), 'success');
       } else {
@@ -121,24 +120,23 @@ export function Settings() {
         </div>
 
         {loading ? (
-          <div className="bg-white rounded-xl p-12 shadow-lg border border-orange-100 text-center">
-            <div className="w-12 h-12 border-4 border-orange-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="bg-white rounded-xl p-12 shadow-lg border border-blue-100 text-center">
+            <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
             <p className="text-gray-600 mt-4">Loading settings...</p>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-lg border border-orange-100 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-lg border border-blue-100 overflow-hidden">
             <div className="p-6 border-b border-gray-100">
               <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                <Bell className="w-5 h-5 text-orange-600" />
+                <Bell className="w-5 h-5 text-blue-600" />
                 {t('notificationPreferences')}
               </h2>
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Language Selector */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-orange-50 rounded-lg border border-orange-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-gradient-to-br from-orange-500 to-amber-600 shrink-0">
+                  <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 shrink-0">
                     <Globe className="w-6 h-6 text-white" />
                   </div>
                   <div>
@@ -147,12 +145,12 @@ export function Settings() {
                   </div>
                 </div>
 
-                <div className="flex bg-white rounded-lg border border-orange-200 p-1">
+                <div className="flex bg-white rounded-lg border border-blue-200 p-1">
                   <button
                     onClick={() => i18n.changeLanguage('en')}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${i18n.language === 'en'
-                      ? 'bg-orange-500 text-white shadow-sm'
-                      : 'text-gray-600 hover:bg-orange-50'
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : 'text-gray-600 hover:bg-blue-50'
                       }`}
                   >
                     English
@@ -160,8 +158,8 @@ export function Settings() {
                   <button
                     onClick={() => i18n.changeLanguage('kn')}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${i18n.language === 'kn'
-                      ? 'bg-orange-500 text-white shadow-sm'
-                      : 'text-gray-600 hover:bg-orange-50'
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : 'text-gray-600 hover:bg-blue-50'
                       }`}
                   >
                     ಕನ್ನಡ
@@ -169,10 +167,10 @@ export function Settings() {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-orange-50 rounded-lg border border-orange-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${notificationsEnabled
-                    ? 'bg-gradient-to-br from-orange-500 to-amber-600'
+                    ? 'bg-gradient-to-br from-blue-500 to-indigo-600'
                     : 'bg-gray-300'
                     }`}>
                     {notificationsEnabled ? (
@@ -191,7 +189,7 @@ export function Settings() {
 
                 <button
                   onClick={() => setNotificationsEnabled(!notificationsEnabled)}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${notificationsEnabled ? 'bg-orange-500' : 'bg-gray-300'
+                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${notificationsEnabled ? 'bg-blue-500' : 'bg-gray-300'
                     }`}
                 >
                   <span
@@ -201,10 +199,10 @@ export function Settings() {
                 </button>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-orange-50 rounded-lg border border-orange-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${smsEnabled
-                    ? 'bg-gradient-to-br from-orange-500 to-amber-600'
+                    ? 'bg-gradient-to-br from-blue-500 to-indigo-600'
                     : 'bg-gray-300'
                     }`}>
                     <Bell className="w-6 h-6 text-white" />
@@ -219,7 +217,7 @@ export function Settings() {
 
                 <button
                   onClick={() => setSmsEnabled(!smsEnabled)}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${smsEnabled ? 'bg-orange-500' : 'bg-gray-300'
+                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${smsEnabled ? 'bg-blue-500' : 'bg-gray-300'
                     }`}
                 >
                   <span
@@ -237,7 +235,7 @@ export function Settings() {
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
                   placeholder={t('enterPhone')}
                   maxLength={10}
                 />
@@ -247,21 +245,21 @@ export function Settings() {
                 <button
                   onClick={() => sendTestNotification('email')}
                   disabled={!!sendingTest}
-                  className="flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-orange-100 rounded-xl text-orange-600 font-semibold hover:bg-orange-50 transition-all disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-blue-100 rounded-xl text-blue-600 font-semibold hover:bg-blue-50 transition-all disabled:opacity-50"
                 >
                   {sendingTest === 'email' ? t('sending') : t('sendTestEmail')}
                 </button>
                 <button
                   onClick={() => sendTestNotification('sms')}
                   disabled={!!sendingTest || !phone}
-                  className="flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-orange-100 rounded-xl text-orange-600 font-semibold hover:bg-orange-50 transition-all disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-blue-100 rounded-xl text-blue-600 font-semibold hover:bg-blue-50 transition-all disabled:opacity-50"
                 >
                   {sendingTest === 'sms' ? t('sending') : t('sendTestSms')}
                 </button>
               </div>
 
-              <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
+              <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4">
+                <p className="text-sm text-indigo-800">
                   <strong>{t('note')}:</strong> {t('noteDesc')}
                 </p>
               </div>
@@ -271,7 +269,7 @@ export function Settings() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-amber-600 text-white px-8 py-3 rounded-lg font-medium hover:from-orange-600 hover:to-amber-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-orange-200"
+                className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-8 py-3 rounded-lg font-medium hover:from-blue-600 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
               >
                 {saving ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
